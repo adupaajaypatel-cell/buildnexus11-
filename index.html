@@ -549,9 +549,9 @@ const handleMouseMove = (e) => {
     const moveX = (mouseX - centerX) * parallaxStrength * -1;
     const moveY = (mouseY - centerY) * parallaxStrength * -1;
     
-    // FIX APPLIED HERE: Changed single quotes to backticks (`) for template literals
-    bodyElement.style.setProperty('--bg-x', ${moveX}px);
-    bodyElement.style.setProperty('--bg-y', ${moveY}px);
+    // FIX APPLIED HERE: Using string concatenation (+) instead of template literals for robustness
+    bodyElement.style.setProperty('--bg-x', moveX + 'px');
+    bodyElement.style.setProperty('--bg-y', moveY + 'px');
 }
 
 document.addEventListener('mousemove', handleMouseMove);
