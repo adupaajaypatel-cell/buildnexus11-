@@ -41,6 +41,7 @@
             background-size: 600% 600%;
             animation: moveBG 20s linear infinite;
             opacity: 0.05;
+            /* Uses JS-controlled variables for parallax */
             transform: translate(var(--bg-x, 0), var(--bg-y, 0));
             transition: transform 0.2s ease-out;
         }
@@ -153,6 +154,7 @@
             border-radius: 12px;
             text-align: center;
             transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            /* Initial state managed by JS */
             opacity: 1; 
             transform: translateY(0);
         }
@@ -208,6 +210,7 @@
         .blueprint-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 2; }
         .blueprint-grid::before, .blueprint-grid::after { content: ''; position: absolute; width: 2px; height: 100%; background: rgba(30,144,255,0.3); animation: slide-vertical 3s linear infinite; }
         .blueprint-grid::after { left: 25%; animation-delay: 1s; }
+        /* Spans and Nodes are dynamically added by JS now */
         .blueprint-grid span { position: absolute; width: 100%; height: 2px; background: rgba(30,144,255,0.2); animation: slide-horizontal 3s linear infinite; }
         .blueprint-grid span:nth-child(1) { top: 20%; animation: slide-horizontal 3s linear infinite; animation-delay: 0s; }
         .blueprint-grid span:nth-child(2) { top: 50%; animation: slide-horizontal 3s linear infinite; animation-delay: 1s; }
@@ -506,8 +509,217 @@
 
 <footer>&copy; 2025 BuildNexus. All rights reserved.</footer>
 
-</body>
+<script>
+'use strict'; 
 
-<script src="main.js"></script> 
+const URL_PLACEHOLDER = 'https://picsum.photos/900/500';
 
+// *** GLOBAL FUNCTION: Image Error Handler ***
+window.handleImageError = (el) => { 
+    el.src = URL_PLACEHOLDER; 
+}; 
+
+// --- Scroll Progress Bar Logic ---
+window.addEventListener('scroll', () => {
+    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    // Calculate total scrollable height
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    // Calculate percentage scrolled
+    const scrolled = (winScroll / height) * 100;
+    
+    const progressBar = document.getElementById("scroll-progress");
+    if (progressBar) {
+        progressBar.style.width = scrolled + "%";
+    }
+});
+
+// --- 1. Background Parallax Effect ---
+const bodyElement = document.body;
+// Strength of parallax effect (lower number is weaker)
+const parallaxStrength = 0.005; 
+
+const handleMouseMove = (e) => {
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+    
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+
+    // Calculate movement relative to screen center, reversed for parallax effect
+    const moveX = (mouseX - centerX) * parallaxStrength * -1;
+    const moveY = (mouseY - centerY) * parallaxStrength * -1;
+    
+    // Apply movement to the custom CSS properties defined in the body::before style
+    bodyElement.style.setProperty('--bg-x', ${moveX}px);
+    bodyElement.style.setProperty('--bg-y', ${moveY}px);
+}
+
+document.addEventListener('mousemove', handleMouseMove);
+
+// --- 2. Testimonial Slider Logic (Now with Dots) ---
+let currentIndex = 0; 
+
+// Function to control which card and dot is active
+const updateSlider = (cards, dots) => {
+    // Defensive check
+    if (!cards || cards.length === 0 || !dots || dots.length === 0) return; 
+
+    cards.forEach((card, index) => {
+        // Show only the current card
+        card.style.display = (index === currentIndex) ? 'block' : 'none';
+    });
+
+    dots.forEach((dot, index) => {
+        // Toggle the 'active' class on the dot corresponding to the current card
+        dot.classList.toggle('active', index === currentIndex);
+    });
+}
+
+
+// Wait until the DOM is fully loaded to run initial element manipulation
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // Get all necessary elements for the slider
+    const slider = document.getElementById('testimonialSlider');
+    const cards = document.querySelectorAll('.testimonial-card');
+    const dots = document.querySelectorAll('.dot');
+
+    // Check if cards exist before setting up navigation and interval
+    if (cards.length > 0) {
+        // 2a. Initialize the slider display
+        updateSlider(cards, dots);
+        
+        // 2b. Manual dot navigation
+        dots.forEach(dot => {
+            dot.addEventListener('click', function() {
+                // Get the index from the data-slide attribute
+                currentIndex = parseInt(this.getAttribute('data-slide'));
+                updateSlider(cards, dots);
+            });
+        });
+
+        // 2c. Simple auto-advance (5 seconds)
+        setInterval(() => {
+            currentIndex = (currentIndex + 1) % cards.length;
+            updateSlider(cards, dots);
+        }, 5000); 
+    }
+
+    // --- 3. Blueprint Grid Animation Setup (Injecting lines and nodes) ---
+    const grid = document.querySelector('.blueprint-grid');
+    if (grid) {
+        // Add 3 horizontal lines (vertical lines are handled by CSS pseudo-elements)
+        for (let i = 0; i < 3; i++) {
+            const line = document.createElement('span');
+            grid.appendChild(line);
+        }
+        // Add 15 random pulsing nodes
+        for (let i = 0; i < 15; i++) {
+            const node = document.createElement('div');
+            node.classList.add('node');
+            // Position nodes randomly within the grid
+            node.style.top = Math.random() * 90 + '%';
+            node.style.left = Math.random() * 90 + '%';
+            grid.appendChild(node);
+        }
+    }
+
+    // --- 4. Newsletter Submission Logic ---
+    const form = document.getElementById('newsletter-form');
+    const message = document.getElementById('form-message');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            message.style.display = 'block';
+            message.textContent = 'Success! Email received for beta access.';
+            setTimeout(() => {
+                message.style.display = 'none';
+                message.textContent = '';
+                form.reset();
+            }, 3000); // Hide message and reset form after 3 seconds
+        });
+    }
+
+    // --- 5. Responsive Navigation Toggle ---
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    // Select all links within the navigation container
+    const links = navLinks ? navLinks.querySelectorAll('a') : [];
+
+    if (menuToggle && navLinks) {
+        // Toggle the 'active' class on menu click
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+        // Close menu after clicking a link (on small screens)
+        links.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 900) {
+                    navLinks.classList.remove('active');
+                }
+            });
+        });
+    }
+
+    // --- 6. Upload Section Logic (Drag and Drop) ---
+    const uploadBox = document.getElementById('uploadBox');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const previewImage = document.getElementById('previewImage');
+    const loading = document.getElementById('loading');
+    const result = document.getElementById('result');
+
+    if (uploadBox && fileInput) {
+        // Handle click event for manual file selection
+        uploadBox.addEventListener('click', () => fileInput.click());
+        
+        // Prevent default behavior for all drag events on the document (necessary to allow drop on the box)
+        document.addEventListener('dragover', (e) => e.preventDefault());
+        document.addEventListener('drop', (e) => e.preventDefault());
+        
+        // Add visual feedback class on dragover on the upload box
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover-effect');
+        });
+        
+        // Remove visual feedback on dragleave
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover-effect');
+        });
+        
+        // Handle file drop on the upload box
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Stop event propagation to prevent it from reaching the document handler
+            uploadBox.classList.remove('dragover-effect');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        // Handle file selected manually
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        function handleFile(file) {
+            // Check if a file was selected and if it's an image
+            if (!file || !file.type.match('image.*')) return; 
+
+            // Reset and show loading/preview
+            uploadBox.style.display = 'none';
+            result.style.display = 'none';
+            loading.style.display = 'none'; // Ensure it's hidden before starting the process
+
+            // Create a local URL for the image preview
+            previewImage.src = URL.createObjectURL(file);
+            uploadPreview.style.display = 'block';
+            loading.style.display = 'block';
+
+            // Simulate AI processing time
+            setTimeout(() => {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+            }, 3000);
+        }
+    }
+});
+</script>
 </html>
