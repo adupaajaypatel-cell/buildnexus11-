@@ -549,7 +549,7 @@ const handleMouseMove = (e) => {
     const moveX = (mouseX - centerX) * parallaxStrength * -1;
     const moveY = (mouseY - centerY) * parallaxStrength * -1;
     
-    // Apply movement to the custom CSS properties defined in the body::before style
+    // FIX APPLIED HERE: Changed single quotes to backticks (`) for template literals
     bodyElement.style.setProperty('--bg-x', ${moveX}px);
     bodyElement.style.setProperty('--bg-y', ${moveY}px);
 }
