@@ -40,7 +40,7 @@ const dots = document.querySelectorAll('.dot');
 let currentIndex = 0;
 
 const updateSlider = () => {
-    // Defensive check added here for 'cards' and 'dots' existence
+    // Defensive check
     if (!cards || cards.length === 0 || !dots || dots.length === 0) return; 
 
     cards.forEach((card, index) => {
@@ -52,19 +52,23 @@ const updateSlider = () => {
     });
 }
 
-// Manual dot navigation
-dots.forEach(dot => {
-    dot.addEventListener('click', function() {
-        currentIndex = parseInt(this.getAttribute('data-slide'));
-        updateSlider();
+// Check if cards exist before setting up navigation and interval
+if (cards.length > 0) {
+    // Manual dot navigation
+    dots.forEach(dot => {
+        dot.addEventListener('click', function() {
+            currentIndex = parseInt(this.getAttribute('data-slide'));
+            updateSlider();
+        });
     });
-});
 
-// Simple auto-advance for visual appeal (3 seconds)
-setInterval(() => {
-    currentIndex = (currentIndex + 1) % cards.length;
-    updateSlider();
-}, 5000); 
+    // Simple auto-advance for visual appeal (3 seconds)
+    setInterval(() => {
+        currentIndex = (currentIndex + 1) % cards.length;
+        updateSlider();
+    }, 5000); 
+}
+
 
 // Wait until the DOM is fully loaded to run initial element manipulation
 document.addEventListener("DOMContentLoaded", function() {
